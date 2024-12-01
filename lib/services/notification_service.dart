@@ -8,12 +8,14 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._();
 
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
 
   Future<void> initialize() async {
     tz.initializeTimeZones();
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -41,7 +43,7 @@ class NotificationService {
 
     final now = DateTime.now();
     final scheduledDate = medicament.rappel;
-    
+
     // Si la date est dans le passé, on programme pour le lendemain
     if (scheduledDate.isBefore(now)) {
       final tomorrow = DateTime(
@@ -57,7 +59,8 @@ class NotificationService {
     }
   }
 
-  Future<void> _scheduleNotification(Medicament medicament, DateTime scheduledDate) async {
+  Future<void> _scheduleNotification(
+      Medicament medicament, DateTime scheduledDate) async {
     final androidDetails = AndroidNotificationDetails(
       'medication_channel',
       'Rappels de médicaments',
@@ -86,7 +89,8 @@ class NotificationService {
       tz.TZDateTime.from(scheduledDate, tz.local),
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
