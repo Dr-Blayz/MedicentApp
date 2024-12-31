@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../models/medicament.dart';
 import '../main.dart';
 import '../services/notification_service.dart';
+import 'home_screen.dart';
 
 class AjouterMedicamentScreen extends StatefulWidget {
   const AjouterMedicamentScreen({super.key});
@@ -64,31 +65,45 @@ class _AjouterMedicamentScreenState extends State<AjouterMedicamentScreen> {
 
   Future<void> _sauvegarderMedicament() async {
     if (_formKey.currentState!.validate()) {
-      final medicament = Medicament(
-        id: const Uuid().v4(),
-        nom: _nomController.text,
-        type: _typeSelectionne ?? 'Comprimé',
-        dose: _doseController.text,
-        quantite: int.parse(_quantiteController.text),
-        rappel: DateTime(
-          _dateSelectionnee.year,
-          _dateSelectionnee.month,
-          _dateSelectionnee.day,
-          _heureSelectionnee.hour,
-          _heureSelectionnee.minute,
-        ),
-        rappelActive: _rappelActive,
-        pris: false,
-      );
+      try {
+        final medicament = Medicament(
+          id: const Uuid().v4(),
+          nom: _nomController.text,
+          type: _typeSelectionne ?? 'Comprimé',
+          dose: _doseController.text,
+          quantite: int.parse(_quantiteController.text),
+          rappel: DateTime(
+            _dateSelectionnee.year,
+            _dateSelectionnee.month,
+            _dateSelectionnee.day,
+            _heureSelectionnee.hour,
+            _heureSelectionnee.minute,
+          ),
+          rappelActive: _rappelActive,
+          pris: false,
+        );
 
-      await storageService.saveMedicament(medicament);
+        await storageService.saveMedicament(medicament);
 
-      if (_rappelActive) {
-        await _notificationService.scheduleNotification(medicament);
-      }
+        if (_rappelActive) {
+          await _notificationService.scheduleNotification(medicament);
+        }
 
-      if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+        if (!mounted) return;
+        
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de l\'enregistrement du médicament'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
