@@ -7,24 +7,21 @@ plugins {
 }
 
 android {
-    namespace = "com.example.my_first_app"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 35// Use the latest compileSdkVersion if possible
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+        coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = "21"
     }
+}
 
     defaultConfig {
-        // Specify your own unique Application ID.
         applicationId = "com.example.my_first_app"
-        
-        // Updated minSdkVersion to 23 for Firebase compatibility.
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -33,16 +30,14 @@ android {
 
     buildTypes {
         release {
-            // Use debug signing config for now.
             signingConfig = signingConfigs.debug
         }
     }
-}
 
 dependencies {
-    // Import the Firebase BoM.
-    implementation platform('com.google.firebase:firebase-bom:33.7.0')
-    implementation 'com.google.firebase:firebase-analytics'
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    
+
 }
 
 flutter {

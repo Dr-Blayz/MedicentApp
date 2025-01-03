@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:uuid/uuid.dart';
 import '../models/medicament.dart';
 import '../main.dart';
-import '../services/notification_service.dart';
 import 'home_screen.dart';
 
 class AjouterMedicamentScreen extends StatefulWidget {
   const AjouterMedicamentScreen({super.key});
 
   @override
-  State<AjouterMedicamentScreen> createState() => _AjouterMedicamentScreenState();
+  State<AjouterMedicamentScreen> createState() =>
+      _AjouterMedicamentScreenState();
 }
 
 class _AjouterMedicamentScreenState extends State<AjouterMedicamentScreen> {
@@ -18,11 +17,10 @@ class _AjouterMedicamentScreenState extends State<AjouterMedicamentScreen> {
   final _nomController = TextEditingController();
   final _doseController = TextEditingController();
   final _quantiteController = TextEditingController();
-  final _notificationService = NotificationService();
-  
+
   bool _rappelActive = false;
   String? _typeSelectionne;
-  DateTime _dateSelectionnee = DateTime.now();
+  final DateTime _dateSelectionnee = DateTime.now();
   TimeOfDay _heureSelectionnee = TimeOfDay.now();
 
   final List<String> _typesMedicaments = [
@@ -85,19 +83,15 @@ class _AjouterMedicamentScreenState extends State<AjouterMedicamentScreen> {
 
         await storageService.saveMedicament(medicament);
 
-        if (_rappelActive) {
-          await _notificationService.scheduleNotification(medicament);
-        }
-
         if (!mounted) return;
-        
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       } catch (e) {
         if (!mounted) return;
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Erreur lors de l\'enregistrement du médicament'),
@@ -223,7 +217,8 @@ class _AjouterMedicamentScreenState extends State<AjouterMedicamentScreen> {
               InkWell(
                 onTap: () => _selectTime(context),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey.shade400),
                     borderRadius: BorderRadius.circular(4),

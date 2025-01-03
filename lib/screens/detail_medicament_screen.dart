@@ -136,23 +136,6 @@ class DetailMedicamentScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade100,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                            onPressed: onEdit,
-                            child: const Text(
-                              'Modifier',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   ],

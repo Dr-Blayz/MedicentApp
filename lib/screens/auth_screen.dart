@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'home_screen.dart'; // Ensure this is the correct import for your HomeScreen
+import 'home_screen.dart';
+import 'accueil_screen.dart'; // Assurez-vous que c'est le bon import pour HomeScreen
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -14,8 +15,35 @@ class AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
   bool _isLogin = true;
   bool _isLoading = false;
+
+  // Validation pour l'email
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Veuillez entrer votre email';
+    }
+    if (!value.contains('@')) {
+      return 'Veuillez entrer un email valide';
+    }
+    return null;
+  }
+
+  // Validation pour le mot de passe
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Veuillez entrer votre mot de passe';
+    }
+    if (value.length < 6) {
+      return 'Le mot de passe doit contenir au moins 6 caractères';
+    }
+    if (!_isLogin && value != _confirmPasswordController.text) {
+      return 'Les mots de passe ne correspondent pas';
+    }
+    return null;
+  }
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
@@ -25,20 +53,22 @@ class AuthScreenState extends State<AuthScreen> {
 
       try {
         if (_isLogin) {
-          // Login logic
+          // Connexion
+          print("Tentative de connexion avec ${_emailController.text.trim()}");
           await FirebaseAuth.instance.signInWithEmailAndPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text.trim(),
           );
+          print("Connexion réussie");
         } else {
-          // Registration logic
+          // Inscription
           final userCredential =
               await FirebaseAuth.instance.createUserWithEmailAndPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text.trim(),
           );
 
-          // Create a user document in Firestore
+          // Créer un document utilisateur dans Firestore
           await FirebaseFirestore.instance
               .collection('users')
               .doc(userCredential.user!.uid)
@@ -46,32 +76,41 @@ class AuthScreenState extends State<AuthScreen> {
             'email': _emailController.text.trim(),
             'createdAt': FieldValue.serverTimestamp(),
           });
+          print("Inscription réussie");
         }
 
-        // Navigate to HomeScreen after successful login or registration
+        // Rediriger vers la page d'accueil après une inscription ou connexion réussie
         if (mounted) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-        }
-
-        // Show success message
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content:
-                  Text(_isLogin ? 'Connexion réussie' : 'Inscription réussie'),
-              backgroundColor: Colors.green,
-            ),
+            MaterialPageRoute(builder: (context) => const AccueilScreen()),
           );
         }
       } on FirebaseAuthException catch (e) {
-        // Show error message
+        // Afficher un message d'erreur spécifique selon l'erreur
+        String errorMessage = 'Une erreur est survenue';
+        if (e.code == 'user-not-found') {
+          errorMessage = 'Aucun utilisateur trouvé pour cet email';
+        } else if (e.code == 'wrong-password') {
+          errorMessage = 'Mot de passe incorrect';
+        } else if (e.code == 'email-already-in-use') {
+          errorMessage = 'Cet email est déjà utilisé';
+        }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(e.message ?? 'Une erreur est survenue'),
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        // Afficher une erreur générique
+        print("Erreur : $e");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Une erreur est survenue, veuillez réessayer'),
               backgroundColor: Colors.red,
             ),
           );
@@ -99,6 +138,7 @@ class AuthScreenState extends State<AuthScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Email
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(
@@ -106,17 +146,11 @@ class AuthScreenState extends State<AuthScreen> {
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer votre email';
-                  }
-                  if (!value.contains('@')) {
-                    return 'Veuillez entrer un email valide';
-                  }
-                  return null;
-                },
+                validator: _validateEmail,
               ),
               const SizedBox(height: 16),
+
+              // Mot de passe
               TextFormField(
                 controller: _passwordController,
                 decoration: const InputDecoration(
@@ -124,17 +158,24 @@ class AuthScreenState extends State<AuthScreen> {
                   border: OutlineInputBorder(),
                 ),
                 obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer votre mot de passe';
-                  }
-                  if (value.length < 6) {
-                    return 'Le mot de passe doit contenir au moins 6 caractères';
-                  }
-                  return null;
-                },
+                validator: _validatePassword,
               ),
+              const SizedBox(height: 16),
+
+              // Confirmation du mot de passe (si inscription)
+              if (!_isLogin)
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Confirmer le mot de passe',
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                  validator: _validatePassword,
+                ),
               const SizedBox(height: 24),
+
+              // Bouton de chargement ou d'action
               if (_isLoading)
                 const CircularProgressIndicator()
               else
@@ -172,6 +213,7 @@ class AuthScreenState extends State<AuthScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 }

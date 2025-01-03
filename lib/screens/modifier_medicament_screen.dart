@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import '../models/medicament.dart';
 import '../main.dart';
 
@@ -12,7 +11,8 @@ class ModifierMedicamentScreen extends StatefulWidget {
   });
 
   @override
-  State<ModifierMedicamentScreen> createState() => _ModifierMedicamentScreenState();
+  State<ModifierMedicamentScreen> createState() =>
+      _ModifierMedicamentScreenState();
 }
 
 class _ModifierMedicamentScreenState extends State<ModifierMedicamentScreen> {
@@ -30,7 +30,8 @@ class _ModifierMedicamentScreenState extends State<ModifierMedicamentScreen> {
     super.initState();
     _nomController = TextEditingController(text: widget.medicament.nom);
     _doseController = TextEditingController(text: widget.medicament.dose);
-    _quantiteController = TextEditingController(text: widget.medicament.quantite.toString());
+    _quantiteController =
+        TextEditingController(text: widget.medicament.quantite.toString());
     _rappelActive = widget.medicament.rappelActive;
     _typeSelectionne = widget.medicament.type;
     _dateSelectionnee = widget.medicament.rappel;
@@ -47,26 +48,43 @@ class _ModifierMedicamentScreenState extends State<ModifierMedicamentScreen> {
 
   Future<void> _sauvegarderModifications() async {
     if (_formKey.currentState!.validate()) {
-      final medicamentModifie = Medicament(
-        id: widget.medicament.id,
-        nom: _nomController.text,
-        type: _typeSelectionne,
-        dose: _doseController.text,
-        quantite: int.parse(_quantiteController.text),
-        rappel: DateTime(
-          _dateSelectionnee.year,
-          _dateSelectionnee.month,
-          _dateSelectionnee.day,
-          _heureSelectionnee.hour,
-          _heureSelectionnee.minute,
-        ),
-        rappelActive: _rappelActive,
-        pris: widget.medicament.pris,
-      );
+      try {
+        final quantite = int.tryParse(_quantiteController.text);
+        if (quantite == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Veuillez entrer une quantité valide')),
+          );
+          return;
+        }
 
-      await storageService.updateMedicament(medicamentModifie);
-      if (mounted) {
-        Navigator.pop(context);
+        final medicamentModifie = Medicament(
+          id: widget.medicament.id,
+          nom: _nomController.text,
+          type: _typeSelectionne,
+          dose: _doseController.text,
+          quantite: quantite,
+          rappel: DateTime(
+            _dateSelectionnee.year,
+            _dateSelectionnee.month,
+            _dateSelectionnee.day,
+            _heureSelectionnee.hour,
+            _heureSelectionnee.minute,
+          ),
+          rappelActive: _rappelActive,
+          pris: widget.medicament.pris,
+        );
+
+        await storageService.updateMedicament(medicamentModifie);
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        print("Erreur lors de la sauvegarde : $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Erreur lors de la sauvegarde des modifications')),
+        );
       }
     }
   }
@@ -131,7 +149,11 @@ class _ModifierMedicamentScreenState extends State<ModifierMedicamentScreen> {
                   labelText: 'Type de médicament',
                   border: OutlineInputBorder(),
                 ),
-                items: ['Comprimé', 'Sirop', 'Injection', 'Autre']
+                items: [
+                  'Gélule',
+                  'Goutte',
+                  'Comprimé',
+                ]
                     .map((type) => DropdownMenuItem(
                           value: type,
                           child: Text(type),
